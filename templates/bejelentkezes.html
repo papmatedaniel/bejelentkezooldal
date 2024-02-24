@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bejelentkezés</title>
+</head>
+<body>
+    <h1>Bejelentkezés</h1>
+    {% if hiba %}
+        <p style="color: red;">{{ hiba }}</p>
+    {% endif %}
+    <form action="/bejelentkezes" method="post">
+        <label for="felhasznalonev">Felhasználónév:</label><br>
+        <input type="text" id="felhasznalonev" name="felhasznalonev" required><br>
+        <label for="jelszo">Jelszó:</label><br>
+        <input type="password" id="jelszo" name="jelszo" required><br><br>
+        <input type="submit" value="Bejelentkezés">
+    </form>
+    <p>Nincs még fiókod? <a href="/regisztracio">Regisztrálj!</a></p>
+</body>
+</html>
