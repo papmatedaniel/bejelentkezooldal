@@ -1,120 +1,77 @@
-# from flask import Flask, render_template, request, redirect, url_for, session
-
-# app = Flask(__name__)
-
-# # A session objektum használatához szükséges titkos kulcs
-# app.secret_key = 'super_secret_key'
-
-# # Dummy adatbázis a felhasználók tárolására
-# users = {}
-
-# # Egyéb útvonalak...
-
-
-# @app.route('/')
-# def index():
-#     if 'username' in session:
-#         return render_template('home.html', username=session['username'])
-#     return render_template('index.html')
-
-# @app.route('/register', methods=['GET', 'POST'])
-# def register():
-#     if request.method == 'POST':
-#         username = request.form['username']
-#         password = request.form['password']
-#         users[username] = password
-#         session['username'] = username
-#         return redirect(url_for('login'))
-#     return render_template('register.html')
-
-# @app.route('/login', methods=['GET', 'POST'])
-# def login():
-#     if request.method == 'POST':
-#         username = request.form['username']
-#         password = request.form['password']
-#         if users.get(username) == password:
-#             # Sikeres bejelentkezés
-#             session['username'] = username
-#             return redirect(url_for('index'))
-#         else:
-#             # Sikertelen bejelentkezés
-#             error = "Hibás felhasználónév vagy jelszó"
-#             return render_template('login.html', error=error)
-#     return render_template('login.html')
-
-
-# @app.route('/logout')
-# def logout():
-#     session.pop('username', None)
-#     return redirect(url_for('index'))
-
-# if __name__ == '__main__':
-#     app.secret_key = 'super_secret_key'
-#     app.run(debug=True)
-
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 
+
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'  # SQLite adatbázis konfiguráció
-app.secret_key = 'super_secret_key'  # Fontos, hogy titkos kulcsot használj a munkamenetekhez
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///felhasznalok.db'  # SQLite adatbázis konfiguráció
+app.secret_key = 'c5e7fe5e7aa2eae27ba0d2369b3be802'  # Fontos, hogy titkos kulcsot használj a munkamenetekhez
 db = SQLAlchemy(app)
 
 # Felhasználó modell létrehozása
-class User(db.Model):
+class Felhasznalo(db.Model):
+    
+    def __init__(self, felhasznalonev, jelszo):
+        self.felhasznalonev = felhasznalonev
+        self.jelszo = jelszo
+        
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    password = db.Column(db.String(100), nullable=False)
+    felhasznalonev = db.Column(db.String(50), unique=True, nullable=False)
+    jelszo = db.Column(db.String(100), nullable=False)
 
-# Dummy adatbázis a felhasználók tárolására
-# users = {}
+
+
 
 with app.app_context():
-    # Az adatbázis létrehozása
     db.create_all()
 
 @app.route('/')
-def index():
-    return render_template('index.html')
+def kezdolap():
+    return render_template('kezdolap.html')
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
+@app.route('/regisztracio', methods=['GET', 'POST'])
+def regisztracio():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        # Felhasználó hozzáadása az adatbázishoz
-        new_user = User(username=username, password=password)
-        db.session.add(new_user)
+        felhasznalonev = request.form['felhasznalonev']
+        jelszo = request.form['jelszo']
+        # Ellenőrizzük, hogy a felhasználónév már létezik-e az adatbázisban
+        felhasznalo_foglalt = Felhasznalo.query.filter_by(felhasznalonev=felhasznalonev).first()
+        if felhasznalo_foglalt:
+            hiba = "Ez a felhasználónév már foglalt. Kérlek, válassz másikat."
+            return render_template('regisztracio.html', hiba=hiba)
+        # Ha nem létezik ilyen felhasználónév, akkor hozzáadjuk az adatbázishoz
+        uj_felhasznalo = Felhasznalo(felhasznalonev=felhasznalonev, jelszo=jelszo)
+        db.session.add(uj_felhasznalo)
         db.session.commit()
-        return redirect(url_for('login'))
-    return render_template('register.html')
+        return redirect(url_for('bejelentkezes'))
+    return render_template('regisztracio.html')
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
+
+@app.route('/bejelentkezes', methods=['GET', 'POST'])
+def bejelentkezes():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user = User.query.filter_by(username=username, password=password).first()
-        if user:
+        felhasznalonev = request.form['felhasznalonev']
+        jelszo = request.form['jelszo']
+        felhasznalo = Felhasznalo.query.filter_by(felhasznalonev=felhasznalonev, jelszo=jelszo).first()
+        if felhasznalo:
             # Sikeres bejelentkezés
-            session['username'] = username
-            return redirect(url_for('home'))
+            session['felhasznalonev'] = felhasznalonev
+            return redirect(url_for('fooldal'))
         else:
             # Sikertelen bejelentkezés
-            error = "Hibás felhasználónév vagy jelszó"
-            return render_template('login.html', error=error)
-    return render_template('login.html')
+            hiba = "Hibás felhasználónév vagy jelszó"
+            return render_template('bejelentkezes.html', hiba=hiba)
+    return render_template('bejelentkezes.html')
 
-@app.route('/home')
-def home():
-    if 'username' in session:
-        return render_template('home.html', username=session['username'])
-    return redirect(url_for('login'))
+@app.route('/fooldal')
+def fooldal():
+    if 'felhasznalonev' in session:
+        return render_template('fooldal.html', felhasznalonev=session['felhasznalonev'])
+    return redirect(url_for('bejelentkezes'))
 
-@app.route('/logout')
-def logout():
-    session.pop('username', None)
-    return redirect(url_for('index'))
+@app.route('/kijelentkezes')
+def kijelentkezes():
+    session.pop('felhasznalonev', None)
+    return redirect(url_for('kezdolap'))
 
 if __name__ == '__main__':
     app.run(debug=True)
