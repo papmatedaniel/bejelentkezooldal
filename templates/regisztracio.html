@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regisztráció</title>
+</head>
+<body>
+    <h1>Regisztráció</h1>
+    {% if hiba %}
+        <p style="color: red;">{{ hiba }}</p>
+    {% endif %}
+    <form action="/regisztracio" method="post">
+        <label for="felhasznalonev">Felhasználónév:</label><br>
+        <input type="text" id="felhasznalonev" name="felhasznalonev" required><br>
+        <label for="jelszo">Jelszó:</label><br>
+        <input type="password" id="jelszo" name="jelszo" required><br><br>
+        <input type="submit" value="Regisztráció">
+    </form>
+    <p>Már van fiókod? <a href="/bejelentkezes">Jelentkezz be!</a></p>
+</body>
+</html>
